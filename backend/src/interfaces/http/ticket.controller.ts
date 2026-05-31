@@ -1,10 +1,16 @@
 import { Request, Response, Router } from 'express';
 import { TicketService } from '../../application/ticket-service';
-import { TicketType } from '../../domain/ticket';
+import { TicketPeriod, TicketType } from '../../domain/entities/ticket';
 
-function parseReferenceDate(value: unknown): Date {
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    return new Date();
+class RequestValidationError extends Error {}
+
+function parseReferenceDate(value: unknown): Date | null {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    throw new RequestValidationError('Parâmetro "date" inválido.');
   }
 
   const trimmed = value.trim();
@@ -12,11 +18,26 @@ function parseReferenceDate(value: unknown): Date {
 
   if (localDateMatch) {
     const [, year, month, day] = localDateMatch;
-    return new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+
+    if (
+      parsed.getFullYear() !== Number(year)
+      || parsed.getMonth() !== Number(month) - 1
+      || parsed.getDate() !== Number(day)
+    ) {
+      throw new RequestValidationError('Parâmetro "date" inválido. Use formato YYYY-MM-DD ou data ISO válida.');
+    }
+
+    return parsed;
   }
 
   const parsed = new Date(trimmed);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw new RequestValidationError('Parâmetro "date" inválido. Use formato YYYY-MM-DD ou data ISO válida.');
+  }
+
+  return parsed;
 }
 
 function parseTicketType(value: unknown): TicketType {
@@ -25,6 +46,18 @@ function parseTicketType(value: unknown): TicketType {
   }
 
   throw new Error('Tipo de senha inválido.');
+}
+
+function parsePeriod(value: unknown): TicketPeriod {
+  if (value == null || value === '') {
+    return 'daily';
+  }
+
+  if (value === 'daily' || value === 'monthly') {
+    return value;
+  }
+
+  throw new RequestValidationError('Parâmetro "period" inválido. Use "daily" ou "monthly".');
 }
 
 export function createTicketRouter(service: TicketService): Router {
@@ -55,21 +88,31 @@ export function createTicketRouter(service: TicketService): Router {
 
   router.get('/overview', async (request: Request, response: Response) => {
     try {
-      const referenceDate = parseReferenceDate(request.query.date);
+      const referenceDate = parseReferenceDate(request.query.date) ?? new Date();
       const result = await service.getOverview(referenceDate);
       response.json(result);
     } catch (error) {
+      if (error instanceof RequestValidationError) {
+        response.status(400).json({ message: error.message });
+        return;
+      }
+
       response.status(500).json({ message: error instanceof Error ? error.message : 'Falha ao carregar o painel.' });
     }
   });
 
   router.get('/reports', async (request: Request, response: Response) => {
     try {
-      const referenceDate = parseReferenceDate(request.query.date);
-      const period = request.query.period === 'monthly' ? 'monthly' : 'daily';
+      const referenceDate = parseReferenceDate(request.query.date) ?? new Date();
+      const period = parsePeriod(request.query.period);
       const result = await service.getReport(period, referenceDate);
       response.json(result);
     } catch (error) {
+      if (error instanceof RequestValidationError) {
+        response.status(400).json({ message: error.message });
+        return;
+      }
+
       response.status(500).json({ message: error instanceof Error ? error.message : 'Falha ao gerar relatório.' });
     }
   });

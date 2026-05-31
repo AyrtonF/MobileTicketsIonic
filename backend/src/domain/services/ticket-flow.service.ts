@@ -32,7 +32,9 @@ export class TicketFlowService {
     }
 
     if (type === TicketType.GERAL) {
-      return 2 + (6 * random());
+      const minMinutes = 2;
+      const maxMinutes = 8;
+      return minMinutes + (random() * (maxMinutes - minMinutes));
     }
 
     // SE: 1 minuto para 95%, 5 minutos para 5%
