@@ -1,4 +1,4 @@
-import { Ticket, TicketType } from '../entities/ticket';
+import { Ticket, TicketType } from '../ticket';
 
 export class TicketFlowService {
   selectNextTicket(waitingTickets: Ticket[], lastCalledType: TicketType | null): Ticket | null {
@@ -15,15 +15,31 @@ export class TicketFlowService {
     return null;
   }
 
+  /**
+   * Calcula o tempo de atendimento em minutos com distribuição uniforme.
+   *
+   * SP (Prioritária): 15 minutos ±5 minutos = 10 a 20 minutos (distribuição uniforme)
+   * SG (Geral): 5 minutos ±3 minutos = 2 a 8 minutos (distribuição uniforme)
+   * SE (Exames): 1 minuto para 95%, 5 minutos para 5%
+   *
+   * @param type Tipo de senha
+   * @param random Função de número aleatório entre 0 e 1
+   * @returns Minutos de atendimento
+   */
   calculateServiceMinutes(type: TicketType, random: () => number): number {
     if (type === TicketType.PRIORITARIA) {
-      return random() < 0.5 ? 10 : 20;
+      // SP: 10 a 20 minutos com distribuição uniforme
+      // Fórmula: Math.round(random() * (max - min) + min)
+      return Math.round(random() * 10 + 10);
     }
 
     if (type === TicketType.GERAL) {
-      return random() < 0.5 ? 2 : 8;
+      // SG: 2 a 8 minutos com distribuição uniforme
+      // Fórmula: Math.round(random() * (max - min) + min)
+      return Math.round(random() * 6 + 2);
     }
 
+    // SE: 1 minuto para 95%, 5 minutos para 5%
     return random() < 0.95 ? 1 : 5;
   }
 

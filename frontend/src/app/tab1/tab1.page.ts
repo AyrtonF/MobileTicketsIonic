@@ -3,12 +3,19 @@ import { ToastController } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { finalize } from 'rxjs';
 import { SenhaService } from '../services/senha.service';
-import { IssueTicketResultDto, TicketOverviewDto, TicketType, ticketTypeLabel, ticketStatusLabel } from '../services/ticket.models';
+import {
+  IssueTicketResultDto,
+  TicketOverviewDto,
+  TicketType,
+  ticketTypeLabel,
+  ticketStatusLabel,
+  discardReasonLabel,
+} from '../services/ticket.models';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
-  styleUrls: ['tab1.page.scss']
+  styleUrls: ['tab1.page.scss'],
 })
 export class Tab1Page implements OnInit {
   readonly TicketType = TicketType;
@@ -36,12 +43,24 @@ export class Tab1Page implements OnInit {
       .subscribe({
         next: async (result) => {
           this.lastIssuedTicket = result;
-          await this.presentToast(
-            result.discarded
-              ? `Senha ${result.ticket.code} descartada automaticamente.`
-              : `Senha ${result.ticket.code} emitida com sucesso.`,
-            result.discarded ? 'warning' : 'success',
-          );
+
+          let message: string;
+          let color: 'success' | 'warning' | 'danger' = 'success';
+
+          if (result.discarded) {
+            color = 'warning';
+            if (result.discardReason === 'OUTSIDE_BUSINESS_HOURS') {
+              message = `Senha ${result.ticket.code} não foi emitida.\n${discardReasonLabel('OUTSIDE_BUSINESS_HOURS')}`;
+            } else if (result.discardReason === 'RANDOM_5_PERCENT') {
+              message = `Senha ${result.ticket.code} descartada automaticamente.`;
+            } else {
+              message = `Senha ${result.ticket.code} descartada automaticamente.`;
+            }
+          } else {
+            message = `Senha ${result.ticket.code} emitida com sucesso!`;
+          }
+
+          await this.presentToast(message, color);
           await this.triggerHaptic(result.discarded ? 'warning' : 'success');
           void this.loadOverview();
         },
