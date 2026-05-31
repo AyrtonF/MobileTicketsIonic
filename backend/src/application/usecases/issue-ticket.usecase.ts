@@ -3,6 +3,7 @@ import { BusinessHoursService } from '../../domain/services/business-hours.servi
 import { Ticket, TicketDiscardReason, TicketStatus, TicketType } from '../../domain/entities/ticket';
 import { TicketRepository } from '../../domain/repositories/ticket-repository';
 import { formatTicketCode } from '../../domain/services/ticket-code';
+import { BusinessHoursService } from '../../domain/services/business-hours.service';
 import { UseCaseDependencies } from './usecase-dependencies';
 
 export interface IssueTicketResult {

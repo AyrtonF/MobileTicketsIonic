@@ -3,12 +3,19 @@ import { ToastController } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { finalize } from 'rxjs';
 import { SenhaService } from '../services/senha.service';
-import { IssueTicketResultDto, TicketOverviewDto, TicketType, ticketTypeLabel, ticketStatusLabel } from '../services/ticket.models';
+import {
+  IssueTicketResultDto,
+  TicketOverviewDto,
+  TicketType,
+  ticketTypeLabel,
+  ticketStatusLabel,
+  discardReasonLabel,
+} from '../services/ticket.models';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
-  styleUrls: ['tab1.page.scss']
+  styleUrls: ['tab1.page.scss'],
 })
 export class Tab1Page implements OnInit {
   readonly TicketType = TicketType;

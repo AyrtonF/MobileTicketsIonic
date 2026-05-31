@@ -6,6 +6,8 @@ export enum TicketType {
 
 export type TicketPeriod = 'daily' | 'monthly';
 
+export type TicketDiscardReason = 'RANDOM_5_PERCENT' | 'OUTSIDE_BUSINESS_HOURS';
+
 export interface TicketDto {
   code: string;
   type: TicketType;
@@ -66,5 +68,14 @@ export function ticketStatusLabel(status: TicketDto['status']): string {
       return 'Atendida';
     case 'DESCARTADA':
       return 'Descartada';
+  }
+}
+
+export function discardReasonLabel(reason: TicketDiscardReason): string {
+  switch (reason) {
+    case 'RANDOM_5_PERCENT':
+      return 'Descarte automático (5%)';
+    case 'OUTSIDE_BUSINESS_HOURS':
+      return 'Fora do expediente (7h-17h)';
   }
 }
