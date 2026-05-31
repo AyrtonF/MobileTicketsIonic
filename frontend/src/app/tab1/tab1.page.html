@@ -61,7 +61,15 @@
         </ion-chip>
       </div>
       <p>
-        {{ issued.discarded ? 'Esta senha foi descartada automaticamente, conforme a regra de 5%.' : 'Senha adicionada à fila com sucesso.' }}
+        {{
+          issued.discarded
+            ? (issued.discardReason === 'BEFORE_OPENING'
+              ? 'Esta senha foi descartada por estar fora do expediente (antes das 07h).'
+              : issued.discardReason === 'AFTER_CLOSING'
+                ? 'Esta senha foi descartada por estar fora do expediente (após as 17h).'
+                : 'Esta senha foi descartada automaticamente, conforme a regra de 5%.')
+            : 'Senha adicionada à fila com sucesso.'
+        }}
       </p>
     </ion-card-content>
   </ion-card>

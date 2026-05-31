@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { Ticket, TicketStatus, TicketType } from '../../domain/entities/ticket';
+import { BusinessHoursService } from '../../domain/services/business-hours.service';
+import { Ticket, TicketDiscardReason, TicketStatus, TicketType } from '../../domain/entities/ticket';
 import { TicketRepository } from '../../domain/repositories/ticket-repository';
 import { formatTicketCode } from '../../domain/services/ticket-code';
 import { UseCaseDependencies } from './usecase-dependencies';
@@ -7,11 +8,13 @@ import { UseCaseDependencies } from './usecase-dependencies';
 export interface IssueTicketResult {
   ticket: Ticket;
   discarded: boolean;
+  discardReason: TicketDiscardReason | null;
 }
 
 export class IssueTicketUseCase {
   private readonly now: () => Date;
   private readonly random: () => number;
+  private readonly businessHoursService: BusinessHoursService;
 
   constructor(
     private readonly repository: TicketRepository,
@@ -19,6 +22,7 @@ export class IssueTicketUseCase {
   ) {
     this.now = dependencies.now ?? (() => new Date());
     this.random = dependencies.random ?? Math.random;
+    this.businessHoursService = new BusinessHoursService();
   }
 
   async execute(type: TicketType): Promise<IssueTicketResult> {
@@ -27,7 +31,10 @@ export class IssueTicketUseCase {
     const end = this.startOfNextDay(issuedAt);
     const sequence = (await this.repository.countIssuedByTypeBetween(type, start, end)) + 1;
     const code = formatTicketCode(issuedAt, type, sequence);
-    const discarded = this.random() < 0.05;
+    const outsideBusinessHoursReason = this.businessHoursService.getDiscardReason(issuedAt);
+    const discardedByRandomRule = this.random() < 0.05;
+    const discardReason = outsideBusinessHoursReason ?? (discardedByRandomRule ? TicketDiscardReason.RANDOM_5_PERCENT : null);
+    const discarded = discardReason !== null;
 
     const ticket: Ticket = {
       id: randomUUID(),
@@ -43,7 +50,7 @@ export class IssueTicketUseCase {
 
     await this.repository.save(ticket);
 
-    return { ticket, discarded };
+    return { ticket, discarded, discardReason };
   }
 
   private startOfDay(date: Date): Date {

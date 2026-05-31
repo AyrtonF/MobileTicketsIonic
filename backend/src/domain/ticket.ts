@@ -10,6 +10,12 @@ export enum TicketStatus {
   DESCARTADA = 'DESCARTADA',
 }
 
+export enum TicketDiscardReason {
+  BEFORE_OPENING = 'BEFORE_OPENING',
+  AFTER_CLOSING = 'AFTER_CLOSING',
+  RANDOM_5_PERCENT = 'RANDOM_5_PERCENT',
+}
+
 export type TicketPriorityGroup = 'PRIORITARIA' | 'NAO_PRIORITARIA';
 
 export type TicketPeriod = 'daily' | 'monthly';

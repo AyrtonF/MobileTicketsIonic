@@ -36,9 +36,10 @@ export class Tab1Page implements OnInit {
       .subscribe({
         next: async (result) => {
           this.lastIssuedTicket = result;
+          const discardMessage = this.discardReasonMessage(result);
           await this.presentToast(
             result.discarded
-              ? `Senha ${result.ticket.code} descartada automaticamente.`
+              ? `Senha ${result.ticket.code} descartada automaticamente. ${discardMessage}`
               : `Senha ${result.ticket.code} emitida com sucesso.`,
             result.discarded ? 'warning' : 'success',
           );
@@ -80,6 +81,22 @@ export class Tab1Page implements OnInit {
     });
 
     await toast.present();
+  }
+
+  discardReasonMessage(result: IssueTicketResultDto): string {
+    if (result.discardReason === 'BEFORE_OPENING') {
+      return 'Fora do expediente: antes das 07h.';
+    }
+
+    if (result.discardReason === 'AFTER_CLOSING') {
+      return 'Fora do expediente: após as 17h.';
+    }
+
+    if (result.discardReason === 'RANDOM_5_PERCENT') {
+      return 'Regra de descarte de 5% aplicada.';
+    }
+
+    return '';
   }
 
   private async triggerHaptic(level: 'success' | 'warning' | 'error'): Promise<void> {

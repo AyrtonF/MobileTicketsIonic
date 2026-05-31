@@ -17,11 +17,11 @@ export class TicketFlowService {
 
   calculateServiceMinutes(type: TicketType, random: () => number): number {
     if (type === TicketType.PRIORITARIA) {
-      return random() < 0.5 ? 10 : 20;
+      return 10 + (10 * random());
     }
 
     if (type === TicketType.GERAL) {
-      return random() < 0.5 ? 2 : 8;
+      return 2 + (6 * random());
     }
 
     return random() < 0.95 ? 1 : 5;
