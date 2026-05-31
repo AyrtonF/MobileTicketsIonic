@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { Ticket, TicketStatus, TicketType, TicketDiscardReason } from '../../domain/ticket';
+import { BusinessHoursService } from '../../domain/services/business-hours.service';
+import { Ticket, TicketDiscardReason, TicketStatus, TicketType } from '../../domain/entities/ticket';
 import { TicketRepository } from '../../domain/repositories/ticket-repository';
 import { formatTicketCode } from '../../domain/services/ticket-code';
 import { BusinessHoursService } from '../../domain/services/business-hours.service';
@@ -8,7 +9,7 @@ import { UseCaseDependencies } from './usecase-dependencies';
 export interface IssueTicketResult {
   ticket: Ticket;
   discarded: boolean;
-  discardReason?: TicketDiscardReason;
+  discardReason: TicketDiscardReason | null;
 }
 
 export class IssueTicketUseCase {
@@ -31,23 +32,10 @@ export class IssueTicketUseCase {
     const end = this.startOfNextDay(issuedAt);
     const sequence = (await this.repository.countIssuedByTypeBetween(type, start, end)) + 1;
     const code = formatTicketCode(issuedAt, type, sequence);
-
-    // Validar expediente
-    const businessHoursValidation = this.businessHoursService.validate(issuedAt);
-    const isOutsideBusinessHours = !businessHoursValidation.isWithinBusinessHours;
-
-    // Verificar descarte
-    const discardedByRandom = this.random() < 0.05;
-    const discardedByBusinessHours = isOutsideBusinessHours;
-    const discarded = discardedByRandom || discardedByBusinessHours;
-
-    // Definir motivo do descarte (priorizar business hours)
-    let discardReason: TicketDiscardReason | undefined;
-    if (discardedByBusinessHours) {
-      discardReason = 'OUTSIDE_BUSINESS_HOURS';
-    } else if (discardedByRandom) {
-      discardReason = 'RANDOM_5_PERCENT';
-    }
+    const outsideBusinessHoursReason = this.businessHoursService.getDiscardReason(issuedAt);
+    const discardedByRandomRule = this.random() < 0.05;
+    const discardReason = outsideBusinessHoursReason ?? (discardedByRandomRule ? TicketDiscardReason.RANDOM_5_PERCENT : null);
+    const discarded = discardReason !== null;
 
     const ticket: Ticket = {
       id: randomUUID(),

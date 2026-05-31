@@ -42,7 +42,7 @@ export interface TicketOverviewDto extends TicketReportDto {
 export interface IssueTicketResultDto {
   ticket: TicketDto;
   discarded: boolean;
-  discardReason?: TicketDiscardReason;
+  discardReason: 'BEFORE_OPENING' | 'AFTER_CLOSING' | 'RANDOM_5_PERCENT' | null;
 }
 
 export interface CallNextTicketResultDto {

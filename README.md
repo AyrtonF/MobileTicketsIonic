@@ -99,10 +99,14 @@ O backend le `PORT`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` e `DB_NAME` 
 
 - Senhas `SP`, `SG` e `SE`
 - Numeracao diaria no formato `YYMMDD-PPSQ`
-- Descarte automatico de 5% das senhas
+- Expediente para emissao entre `07:00` e `17:00` (fora desse horario a senha e descartada com motivo)
+- Descarte automatico de 5% das senhas emitidas dentro do expediente
 - Chamada em ciclo respeitando prioridade e alternancia
 - Relatorio diario e mensal com resumo e detalhamento
-- Tempo medio de atendimento por tipo de senha
+- Tempo medio por tipo de senha com variacao:
+  - `SP`: distribuicao uniforme entre `10` e `20` minutos
+  - `SG`: distribuicao uniforme entre `2` e `8` minutos
+  - `SE`: `1` minuto (95%) ou `5` minutos (5%)
 
 ## Licenca
 

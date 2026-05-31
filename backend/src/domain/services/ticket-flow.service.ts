@@ -28,15 +28,11 @@ export class TicketFlowService {
    */
   calculateServiceMinutes(type: TicketType, random: () => number): number {
     if (type === TicketType.PRIORITARIA) {
-      // SP: 10 a 20 minutos com distribuição uniforme
-      // Fórmula: Math.round(random() * (max - min) + min)
-      return Math.round(random() * 10 + 10);
+      return 10 + (10 * random());
     }
 
     if (type === TicketType.GERAL) {
-      // SG: 2 a 8 minutos com distribuição uniforme
-      // Fórmula: Math.round(random() * (max - min) + min)
-      return Math.round(random() * 6 + 2);
+      return 2 + (6 * random());
     }
 
     // SE: 1 minuto para 95%, 5 minutos para 5%

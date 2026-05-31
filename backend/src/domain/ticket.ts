@@ -10,7 +10,11 @@ export enum TicketStatus {
   DESCARTADA = 'DESCARTADA',
 }
 
-export type TicketDiscardReason = 'RANDOM_5_PERCENT' | 'OUTSIDE_BUSINESS_HOURS';
+export enum TicketDiscardReason {
+  BEFORE_OPENING = 'BEFORE_OPENING',
+  AFTER_CLOSING = 'AFTER_CLOSING',
+  RANDOM_5_PERCENT = 'RANDOM_5_PERCENT',
+}
 
 export type TicketPriorityGroup = 'PRIORITARIA' | 'NAO_PRIORITARIA';
 
