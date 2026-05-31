@@ -3,7 +3,6 @@ import { BusinessHoursService } from '../../domain/services/business-hours.servi
 import { Ticket, TicketDiscardReason, TicketStatus, TicketType } from '../../domain/entities/ticket';
 import { TicketRepository } from '../../domain/repositories/ticket-repository';
 import { formatTicketCode } from '../../domain/services/ticket-code';
-import { BusinessHoursService } from '../../domain/services/business-hours.service';
 import { UseCaseDependencies } from './usecase-dependencies';
 
 export interface IssueTicketResult {
@@ -32,9 +31,16 @@ export class IssueTicketUseCase {
     const end = this.startOfNextDay(issuedAt);
     const sequence = (await this.repository.countIssuedByTypeBetween(type, start, end)) + 1;
     const code = formatTicketCode(issuedAt, type, sequence);
-    const outsideBusinessHoursReason = this.businessHoursService.getDiscardReason(issuedAt);
-    const discardedByRandomRule = this.random() < 0.05;
-    const discardReason = outsideBusinessHoursReason ?? (discardedByRandomRule ? TicketDiscardReason.RANDOM_5_PERCENT : null);
+    const businessHoursValidation = this.businessHoursService.validate(issuedAt);
+    const discardedByRandomRule = !businessHoursValidation.isWithinBusinessHours ? false : this.random() < 0.05;
+    let discardReason: TicketDiscardReason | null = null;
+
+    if (!businessHoursValidation.isWithinBusinessHours) {
+      discardReason = businessHoursValidation.reason ?? null;
+    } else if (discardedByRandomRule) {
+      discardReason = TicketDiscardReason.RANDOM_5_PERCENT;
+    }
+
     const discarded = discardReason !== null;
 
     const ticket: Ticket = {

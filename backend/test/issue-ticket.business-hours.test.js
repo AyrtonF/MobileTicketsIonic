@@ -70,3 +70,16 @@ test('permite emissao as 16:59', async () => {
   assert.equal(result.discardReason, null);
   assert.equal(result.ticket.status, TicketStatus.EMITIDA);
 });
+
+test('prioriza descarte por horario quando fora do expediente', async () => {
+  const repository = createRepository();
+  const useCase = new IssueTicketUseCase(repository, {
+    now: () => new Date(2026, 4, 31, 6, 0, 0, 0),
+    random: () => 0.01,
+  });
+
+  const result = await useCase.execute(TicketType.GERAL);
+
+  assert.equal(result.discarded, true);
+  assert.equal(result.discardReason, TicketDiscardReason.BEFORE_OPENING);
+});
